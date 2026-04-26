@@ -48,7 +48,7 @@ parameters:
 - name: stateStorageAccount
   displayName: Terraform State Storage Account
   type: string
-  default: sttfstatepyq8
+  default: sttfstatezy35
 
 - name: stateContainer
   displayName: Terraform State Container
