@@ -1,0 +1,80 @@
+name: tf-apply-$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+    - main
+    - dev
+  paths:
+    include:
+    - modules/**
+    - stacks/**
+    - environments/**
+    - pipelines/**
+    - azure-pipelines-apply.yml
+
+pr:
+  branches:
+    include:
+    - main
+  paths:
+    include:
+    - modules/**
+    - stacks/**
+    - environments/**
+    - pipelines/**
+    - azure-pipelines-apply.yml
+
+parameters:
+- name: environment
+  displayName: Environment
+  type: string
+  default: dev
+  values:
+  - dev
+  - stage
+  - prod
+
+- name: serviceConnection
+  displayName: Azure Service Connection Name
+  type: string
+  default: sc-azure-terraform
+
+- name: stateResourceGroup
+  displayName: Terraform State Resource Group
+  type: string
+  default: rg-tfstate-shared
+
+- name: stateStorageAccount
+  displayName: Terraform State Storage Account
+  type: string
+  default: sttfstatepyq8
+
+- name: stateContainer
+  displayName: Terraform State Container
+  type: string
+  default: tfstate
+
+- name: stateKeyPrefix
+  displayName: Terraform State Key Prefix
+  type: string
+  default: aks
+
+variables:
+- name: PIPELINE_APPROVER_EMAILS
+  value: $(Build.RequestedForEmail)
+
+extends:
+  template: pipelines/templates/terraform-stages.yml
+  parameters:
+    expectedMode: apply
+    decommission: false
+    environment: ${{ parameters.environment }}
+    confirmDestroy: "NO"
+    serviceConnection: ${{ parameters.serviceConnection }}
+    stateResourceGroup: ${{ parameters.stateResourceGroup }}
+    stateStorageAccount: ${{ parameters.stateStorageAccount }}
+    stateContainer: ${{ parameters.stateContainer }}
+    stateKeyPrefix: ${{ parameters.stateKeyPrefix }}
+    approvalNotifyUsers: "$(PIPELINE_APPROVER_EMAILS)"
+    approvalTimeoutInMinutes: 1440
