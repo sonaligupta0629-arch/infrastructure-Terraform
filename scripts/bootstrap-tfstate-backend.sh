@@ -53,6 +53,7 @@ sanitize_storage_prefix() {
 
 SUBSCRIPTION_ID="$(az account show --query id --output tsv)"
 SERVICE_PRINCIPAL_APP_ID="$(az account show --query user.name --output tsv)"
+SERVICE_PRINCIPAL_OBJECT_ID="$(az ad sp show --id "$SERVICE_PRINCIPAL_APP_ID" --query id --output tsv)"
 
 if [[ -z "$SUBSCRIPTION_ID" ]]; then
   echo "Error: unable to determine active Azure subscription from current login context."
@@ -61,6 +62,7 @@ fi
 
 echo "Using subscription '$SUBSCRIPTION_ID'."
 echo "Using service principal app id '$SERVICE_PRINCIPAL_APP_ID'."
+echo "Using service principal object id '$SERVICE_PRINCIPAL_OBJECT_ID'."
 az account set --subscription "$SUBSCRIPTION_ID" >/dev/null
 
 if [[ "$ACTION" == "create" ]]; then
@@ -195,7 +197,8 @@ if [[ "$ACTION" == "create" ]]; then
     --output tsv)"
 
   EXISTING_ROLE_ASSIGNMENT="$(az role assignment list \
-    --assignee "$SERVICE_PRINCIPAL_APP_ID" \
+    --assignee-object-id "$SERVICE_PRINCIPAL_OBJECT_ID" \
+    --assignee-principal-type ServicePrincipal \
     --scope "$STORAGE_ACCOUNT_ID" \
     --role "Storage Blob Data Contributor" \
     --query '[0].id' \
@@ -204,7 +207,7 @@ if [[ "$ACTION" == "create" ]]; then
   if [[ -z "$EXISTING_ROLE_ASSIGNMENT" ]]; then
     echo "Granting Storage Blob Data Contributor on the tfstate storage account to the current service principal..."
     az role assignment create \
-      --assignee "$SERVICE_PRINCIPAL_APP_ID" \
+      --assignee-object-id "$SERVICE_PRINCIPAL_OBJECT_ID" \
       --assignee-principal-type ServicePrincipal \
       --role "Storage Blob Data Contributor" \
       --scope "$STORAGE_ACCOUNT_ID" >/dev/null
