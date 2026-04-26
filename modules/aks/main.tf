@@ -10,7 +10,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     name                         = "system"
     vm_size                      = var.system_node_vm_size
     type                         = "VirtualMachineScaleSets"
-    auto_scaling_enabled         = true
+    enable_auto_scaling          = true
     min_count                    = var.system_node_min_count
     max_count                    = var.system_node_max_count
     os_disk_size_gb              = var.system_node_os_disk_size_gb
@@ -57,7 +57,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "user" {
   vm_size               = var.user_node_vm_size
   mode                  = "User"
   os_type               = "Linux"
-  auto_scaling_enabled  = true
+  enable_auto_scaling   = true
   min_count             = var.user_node_min_count
   max_count             = var.user_node_max_count
   os_disk_size_gb       = var.user_node_os_disk_size_gb
