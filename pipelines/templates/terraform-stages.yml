@@ -247,7 +247,12 @@ stages:
             -backend-config="resource_group_name=${{ parameters.stateResourceGroup }}" \
             -backend-config="storage_account_name=${{ parameters.stateStorageAccount }}" \
             -backend-config="container_name=${{ parameters.stateContainer }}" \
-            -backend-config="key=${{ parameters.stateKeyPrefix }}-${{ parameters.environment }}.tfstate"
+            -backend-config="key=${{ parameters.stateKeyPrefix }}-${{ parameters.environment }}.tfstate" \
+            -backend-config="use_azuread_auth=true" \
+            -backend-config="use_oidc=true" \
+            -backend-config="subscription_id=${ARM_SUBSCRIPTION_ID}" \
+            -backend-config="tenant_id=${ARM_TENANT_ID}" \
+            -backend-config="client_id=${ARM_CLIENT_ID}"
 
           terraform plan \
             -input=false \
@@ -331,7 +336,12 @@ stages:
             -backend-config="resource_group_name=${{ parameters.stateResourceGroup }}" \
             -backend-config="storage_account_name=${{ parameters.stateStorageAccount }}" \
             -backend-config="container_name=${{ parameters.stateContainer }}" \
-            -backend-config="key=${{ parameters.stateKeyPrefix }}-${{ parameters.environment }}.tfstate"
+            -backend-config="key=${{ parameters.stateKeyPrefix }}-${{ parameters.environment }}.tfstate" \
+            -backend-config="use_azuread_auth=true" \
+            -backend-config="use_oidc=true" \
+            -backend-config="subscription_id=${ARM_SUBSCRIPTION_ID}" \
+            -backend-config="tenant_id=${ARM_TENANT_ID}" \
+            -backend-config="client_id=${ARM_CLIENT_ID}"
 
           terraform apply -input=false -auto-approve "$(Pipeline.Workspace)/tfplan-${{ parameters.environment }}/tfplan"
 
@@ -384,7 +394,12 @@ stages:
             -backend-config="resource_group_name=${{ parameters.stateResourceGroup }}" \
             -backend-config="storage_account_name=${{ parameters.stateStorageAccount }}" \
             -backend-config="container_name=${{ parameters.stateContainer }}" \
-            -backend-config="key=${{ parameters.stateKeyPrefix }}-${{ parameters.environment }}.tfstate"
+            -backend-config="key=${{ parameters.stateKeyPrefix }}-${{ parameters.environment }}.tfstate" \
+            -backend-config="use_azuread_auth=true" \
+            -backend-config="use_oidc=true" \
+            -backend-config="subscription_id=${ARM_SUBSCRIPTION_ID}" \
+            -backend-config="tenant_id=${ARM_TENANT_ID}" \
+            -backend-config="client_id=${ARM_CLIENT_ID}"
 
           terraform plan \
             -destroy \
@@ -470,6 +485,11 @@ stages:
             -backend-config="resource_group_name=${{ parameters.stateResourceGroup }}" \
             -backend-config="storage_account_name=${{ parameters.stateStorageAccount }}" \
             -backend-config="container_name=${{ parameters.stateContainer }}" \
-            -backend-config="key=${{ parameters.stateKeyPrefix }}-${{ parameters.environment }}.tfstate"
+            -backend-config="key=${{ parameters.stateKeyPrefix }}-${{ parameters.environment }}.tfstate" \
+            -backend-config="use_azuread_auth=true" \
+            -backend-config="use_oidc=true" \
+            -backend-config="subscription_id=${ARM_SUBSCRIPTION_ID}" \
+            -backend-config="tenant_id=${ARM_TENANT_ID}" \
+            -backend-config="client_id=${ARM_CLIENT_ID}"
 
           terraform apply -input=false -auto-approve "$(Pipeline.Workspace)/tfdestroyplan-${{ parameters.environment }}/tfdestroyplan"

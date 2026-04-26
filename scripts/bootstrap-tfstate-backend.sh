@@ -170,6 +170,31 @@ if [[ "$ACTION" == "create" ]]; then
     --account-key "$ACCOUNT_KEY" \
     --public-access off >/dev/null
 
+  STORAGE_ACCOUNT_ID="$(az storage account show \
+    --name "$EFFECTIVE_STORAGE_ACCOUNT_NAME" \
+    --resource-group "$RESOURCE_GROUP_NAME" \
+    --subscription "$SUBSCRIPTION_ID" \
+    --query id \
+    --output tsv)"
+
+  EXISTING_ROLE_ASSIGNMENT="$(az role assignment list \
+    --assignee "$SERVICE_PRINCIPAL_APP_ID" \
+    --scope "$STORAGE_ACCOUNT_ID" \
+    --role "Storage Blob Data Contributor" \
+    --query '[0].id' \
+    --output tsv 2>/dev/null || true)"
+
+  if [[ -z "$EXISTING_ROLE_ASSIGNMENT" ]]; then
+    echo "Granting Storage Blob Data Contributor on the tfstate storage account to the current service principal..."
+    az role assignment create \
+      --assignee "$SERVICE_PRINCIPAL_APP_ID" \
+      --assignee-principal-type ServicePrincipal \
+      --role "Storage Blob Data Contributor" \
+      --scope "$STORAGE_ACCOUNT_ID" >/dev/null
+  else
+    echo "Storage Blob Data Contributor is already assigned for the current service principal."
+  fi
+
   echo "Bootstrap create complete."
   echo ""
   echo "Set these Azure DevOps pipeline variables:"
