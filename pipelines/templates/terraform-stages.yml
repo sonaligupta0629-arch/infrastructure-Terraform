@@ -199,7 +199,7 @@ stages:
       displayName: Run terraform validate
 
 - stage: PlanApply
-  displayName: ${{ parameters.environment }}: Plan - Apply
+  displayName: "${{ parameters.environment }}: Plan - Apply"
   dependsOn: ValidateApply
   condition: and(succeeded(), eq('${{ parameters.decommission }}', 'false'))
   jobs:
@@ -263,7 +263,7 @@ stages:
         onTimeout: reject
 
 - stage: Apply
-  displayName: ${{ parameters.environment }}: Apply
+  displayName: "${{ parameters.environment }}: Apply"
   dependsOn: ApproveApply
   condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), eq('${{ parameters.decommission }}', 'false'))
   jobs:
@@ -308,7 +308,7 @@ stages:
                 terraform apply -input=false -auto-approve "$(Pipeline.Workspace)/tfplan-${{ parameters.environment }}/tfplan"
 
 - stage: PlanDestroy
-  displayName: ${{ parameters.environment }}: Plan - Destroy
+  displayName: "${{ parameters.environment }}: Plan - Destroy"
   dependsOn: ValidateDestroy
   condition: and(succeeded(), eq('${{ parameters.decommission }}', 'true'))
   jobs:
@@ -374,7 +374,7 @@ stages:
         onTimeout: reject
 
 - stage: Destroy
-  displayName: ${{ parameters.environment }}: Destroy
+  displayName: "${{ parameters.environment }}: Destroy"
   dependsOn: ApproveDestroy
   condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), eq('${{ parameters.confirmDestroy }}', 'YES'), eq('${{ parameters.decommission }}', 'true'))
   jobs:
