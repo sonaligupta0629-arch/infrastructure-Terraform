@@ -113,48 +113,65 @@ if [[ "$ACTION" == "create" ]]; then
 
   EFFECTIVE_STORAGE_ACCOUNT_NAME=""
 
-  for _ in 1 2 3 4 5 6 7 8; do
-    CANDIDATE_NAME="${STORAGE_ACCOUNT_PREFIX}$(generate_random_suffix "$RANDOM_SUFFIX_LENGTH")"
-    echo "Trying storage account name '$CANDIDATE_NAME'..."
+  EXISTING_STORAGE_ACCOUNT_NAME="$(az storage account show \
+    --name "$STORAGE_ACCOUNT_PREFIX" \
+    --resource-group "$RESOURCE_GROUP_NAME" \
+    --subscription "$SUBSCRIPTION_ID" \
+    --query name \
+    --output tsv 2>/dev/null || true)"
 
-    set +e
-    CREATE_OUTPUT="$(az storage account create \
-      --name "$CANDIDATE_NAME" \
-      --resource-group "$RESOURCE_GROUP_NAME" \
-      --subscription "$SUBSCRIPTION_ID" \
-      --location "$LOCATION" \
-      --sku Standard_LRS \
-      --kind StorageV2 \
-      --min-tls-version TLS1_2 \
-      --allow-blob-public-access false \
-      --https-only true 2>&1)"
-    CREATE_EXIT_CODE=$?
-    set -e
+  if [[ -n "$EXISTING_STORAGE_ACCOUNT_NAME" ]]; then
+    EFFECTIVE_STORAGE_ACCOUNT_NAME="$EXISTING_STORAGE_ACCOUNT_NAME"
+    echo "Reusing existing storage account '$EFFECTIVE_STORAGE_ACCOUNT_NAME'."
+  fi
 
-    if [[ "$CREATE_EXIT_CODE" -eq 0 ]]; then
-      EFFECTIVE_STORAGE_ACCOUNT_NAME="$CANDIDATE_NAME"
-      break
-    fi
+  if [[ -z "$EFFECTIVE_STORAGE_ACCOUNT_NAME" ]]; then
+    for _ in 1 2 3 4 5 6 7 8; do
+      CANDIDATE_NAME="${STORAGE_ACCOUNT_PREFIX}$(generate_random_suffix "$RANDOM_SUFFIX_LENGTH")"
+      echo "Trying storage account name '$CANDIDATE_NAME'..."
 
-    if echo "$CREATE_OUTPUT" | grep -qiE "StorageAccountAlreadyTaken|StorageAccountAlreadyExists|already taken|already in use"; then
-      echo "Storage account name '$CANDIDATE_NAME' is unavailable. Trying another suffix..."
-      continue
-    fi
+      set +e
+      CREATE_OUTPUT="$(az storage account create \
+        --name "$CANDIDATE_NAME" \
+        --resource-group "$RESOURCE_GROUP_NAME" \
+        --subscription "$SUBSCRIPTION_ID" \
+        --location "$LOCATION" \
+        --sku Standard_LRS \
+        --kind StorageV2 \
+        --min-tls-version TLS1_2 \
+        --allow-blob-public-access false \
+        --https-only true 2>&1)"
+      CREATE_EXIT_CODE=$?
+      set -e
 
-    echo "Error: failed to create storage account '$CANDIDATE_NAME'."
-    echo "$CREATE_OUTPUT"
-    echo "If this shows SubscriptionNotFound, the service connection identity still lacks valid access to subscription '$SUBSCRIPTION_ID'."
-    exit "$CREATE_EXIT_CODE"
-  done
+      if [[ "$CREATE_EXIT_CODE" -eq 0 ]]; then
+        EFFECTIVE_STORAGE_ACCOUNT_NAME="$CANDIDATE_NAME"
+        break
+      fi
+
+      if echo "$CREATE_OUTPUT" | grep -qiE "StorageAccountAlreadyTaken|StorageAccountAlreadyExists|already taken|already in use"; then
+        echo "Storage account name '$CANDIDATE_NAME' is unavailable. Trying another suffix..."
+        continue
+      fi
+
+      echo "Error: failed to create storage account '$CANDIDATE_NAME'."
+      echo "$CREATE_OUTPUT"
+      echo "If this shows SubscriptionNotFound, the service connection identity still lacks valid access to subscription '$SUBSCRIPTION_ID'."
+      exit "$CREATE_EXIT_CODE"
+    done
+  fi
 
   if [[ -z "$EFFECTIVE_STORAGE_ACCOUNT_NAME" ]]; then
     echo "Error: could not find an available storage account name for prefix '$STORAGE_ACCOUNT_PREFIX'."
     exit 1
   fi
 
-  echo "Storage account prefix '$STORAGE_ACCOUNT_PREFIX' resolved to '$EFFECTIVE_STORAGE_ACCOUNT_NAME'."
-
-  echo "Storage account '$EFFECTIVE_STORAGE_ACCOUNT_NAME' created."
+  if [[ "$EFFECTIVE_STORAGE_ACCOUNT_NAME" == "$STORAGE_ACCOUNT_PREFIX" ]]; then
+    echo "Storage account prefix '$STORAGE_ACCOUNT_PREFIX' resolved to existing account '$EFFECTIVE_STORAGE_ACCOUNT_NAME'."
+  else
+    echo "Storage account prefix '$STORAGE_ACCOUNT_PREFIX' resolved to '$EFFECTIVE_STORAGE_ACCOUNT_NAME'."
+    echo "Storage account '$EFFECTIVE_STORAGE_ACCOUNT_NAME' created."
+  fi
 
   echo "Creating tfstate container '$CONTAINER_NAME'..."
   ACCOUNT_KEY="$(az storage account keys list \

@@ -21,7 +21,7 @@ parameters:
   default: rg-tfstate-shared
 
 - name: storageAccountName
-  displayName: State Storage Account Name Prefix
+  displayName: State Storage Account Name (existing name or prefix)
   type: string
   default: sttfstatechangeme01
 
